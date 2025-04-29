@@ -62,7 +62,7 @@ Visible = 8, Hidden dice count = 2 → EV = 8 + 2×3.5 = 15.0
 
 ---
 
-## 4 Option (“Power Card”) pricing
+## 4 Option pricing
 
 Option premium is set dynamically every round:
 
