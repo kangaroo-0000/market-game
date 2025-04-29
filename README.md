@@ -40,6 +40,26 @@ Three fair six-sided dice ⇒ sample space = 216.
 
 Hidden dice (shown as **H**) are valued **3.5** in expectation (each die has mean 3.5).
 
+**Example (Participant)**
+
+Dice display: [8, H, H] 
+Visible = 8, Hidden dice count = 2 → EV = 8 + 2×3.5 = 15.0
+
+- If Offer ≤ 15.0, buying at the Offer has positive expectation.
+
+- If Bid ≥ 15.0, selling at the Bid is profitable.
+
+**Example (Maker)**
+
+- You set mid = 10, spread = 4 → Bid = 8, Offer = 12.
+
+- EV often clusters near 10.5; a symmetric book yields spread income with neutral expectation.
+
+- If hidden dice reveal sum = 15, sellers paid 15 – bid/book risk.
+
+- Imbalances (unequal buys vs sells) create directional P/L beyond spread.
+
+
 ---
 
 ## 4 Option (“Power Card”) pricing
