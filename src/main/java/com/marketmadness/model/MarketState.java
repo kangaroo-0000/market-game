@@ -1,54 +1,100 @@
+// File: src/main/java/com/marketmadness/model/MarketState.java
 package com.marketmadness.model;
 
 import java.util.*;
+import com.marketmadness.model.DiceSet;
+import com.marketmadness.model.TickResult;
+
 
 public class MarketState {
     private final DiceSet dice = new DiceSet();
-    private double midpoint = 100, spread = 4;
-    private double makerCumPL = 0;
-    private final List<Trade> trades = new ArrayList<>();
-    private int bought = 0, sold = 0;
 
-    public synchronized void submitMarket(double mid, double spr) {
-        midpoint = mid;
-        spread = spr;
-        bought = sold = 0;
-        trades.clear();
+    private double midpoint   = 10.5;
+    private double spread     = 1.0;
+    private double makerCumPL = 0.0;
+
+    // accumulate all trades this round
+    private final java.util.List<Trade> trades = new java.util.ArrayList<>();
+
+    /** Called when the maker hits “Submit Market” */
+    public synchronized void submitMarket(double m, double s) {
+        this.midpoint = m;
+        this.spread   = s;
+        trades.clear();     // reset any leftover participant orders
     }
 
+    /** Called whenever either panel executes a trade */
     public synchronized void addTrade(Trade t) {
         trades.add(t);
-        if (t.side() == Side.BUY) {
-            bought += t.qty();
-        } else {
-            sold += t.qty();
-        }
     }
 
+    /**
+     * Called every 15 s.
+     * Rolls the dice, computes EV, simulates maker + participant P/L,
+     * then returns all the data needed by the GUI.
+     */
     public synchronized TickResult nextRound() {
+        // 1) roll & reveal dice
         dice.roll();
-        int sum = dice.realise();
-        double settle = switch (sum) {
-            case 2, 3, 4, 5, 6 -> midpoint - 1;
-            case 7 -> midpoint;
-            default -> midpoint + 1;
-        };
-        double partPL = trades.stream().mapToDouble(t -> t.computePL(settle)).sum();
-        int matched = Math.min(bought, sold);
-        double spreadRev = matched * spread;
-        int net = bought - sold;
-        double invPL = net * (settle - midpoint);
-        double makerPL = spreadRev - invPL;
-        makerCumPL += makerPL;
+        int sum = dice.realise();           // also flips all hidden dice
+
+        // 2) get the visible faces for display
+        int[] vis = dice.visible();
+
+        // 3) compute participant EV from visible + hidden
+        long hiddenCount = Arrays.stream(vis).filter(v -> v == 0).count();
+        double visibleSum = Arrays.stream(vis).sum();
+        double expectedSum = visibleSum + hiddenCount * 3.5;
+
+        // 4) current quotes
+        double bid   = midpoint - spread/2;
+        double offer = midpoint + spread/2;
+
+        // 5) maker’s simulated 100 traders
+        int TOTAL = 100;
+        double edgeBuy  = clamp((offer - expectedSum) / spread,  0, 1);
+        double edgeSell = clamp((expectedSum - bid)   / spread,  0, 1);
+        int buyers  = (int)Math.round(edgeBuy  * TOTAL);
+        int sellers = (int)Math.round(edgeSell * TOTAL);
+        int matched  = Math.min(buyers, sellers);
+        int imbalance = buyers - sellers;
+
+        // 6) P/L calculations
+        double spreadRev       = matched * spread;
+        double inventoryPL     = imbalance * (sum - midpoint);
+        double makerPLthisRnd  = spreadRev + inventoryPL;
+        makerCumPL += makerPLthisRnd;
+
+        // 7) participant P/L = sum of computePL(realizedPrice) over all trades
+        double partPLthisRnd = trades.stream()
+                .mapToDouble(t -> t.computePL(sum))
+                .sum();
+
+        // 8) clear for next round
         trades.clear();
-        return new TickResult(sum, settle, makerPL, partPL, makerCumPL, dice.visible());
+
+        // 9) package everything for GUI
+        return new TickResult(
+                sum,                  // diceSum
+                sum,                  // realizedPrice
+                makerPLthisRnd,       // maker P/L this round
+                partPLthisRnd,        // participant P/L this round
+                makerCumPL,           // cumulative maker P/L
+                vis,                   // the three visible ints (zeros = previously hidden)
+                false,
+                false,
+                buyers,
+                sellers,
+                matched,
+                spreadRev,
+                inventoryPL
+        );
     }
 
-    public synchronized double bid() {
-        return midpoint - spread / 2;
-    }
+    public synchronized double bid()   { return midpoint - spread/2; }
+    public synchronized double offer() { return midpoint + spread/2; }
 
-    public synchronized double offer() {
-        return midpoint + spread / 2;
+    private double clamp(double x, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, x));
     }
 }

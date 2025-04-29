@@ -74,7 +74,11 @@ public class MainFrame extends JFrame {
         /* Tick listener: update dice + chart */
         controller.onTick(tr -> {
             dice.update(tr.visibleDice());
-            chart.addPoint(tr.makerCumPL());
+
+            // only update the P/L chart if *you* acted last round
+            if (tr.makerActive() || tr.participantActive()) {
+                chart.addPoint(tr.makerCumPL());
+            }
         });
 
         /* Broadcast initial zero score so you appear instantly on leaderboard */

@@ -23,7 +23,8 @@ Open the jar again in another terminal (or on a friend’s machine on the same L
 | **Market Maker** | • Enter **mid-price** and **spread**.<br>• Collect half-spread on each matched buy/sell.<br>• Carry any **inventory imbalance** into the dice realisation. |
 | **Participant** | • See current **Bid / Offer**.<br>• **Buy**, **Sell** or purchase a **Call / Put** option.<br>• Position realises when the three dice are fully revealed. |
 
-A progress bar counts down. At *t = 0* the hidden dice flip, inventory is settled, and a fresh quote appears.
+Choose a Role. A progress bar counts down. At *t = 0* the hidden dice flip, inventory is settled, and a fresh quote appears.
+> **Limits:** All Bid/Offer quotes are clamped to the range **[3, 18]** (the min/max possible dice sums), and each round we simulate **100** traders when computing Maker P/L.
 
 ---
 
@@ -51,15 +52,49 @@ Visible = 8, Hidden dice count = 2 → EV = 8 + 2×3.5 = 15.0
 
 **Example (Maker)**
 
-- You set mid = 10, spread = 4 → Bid = 8, Offer = 12.
+- You set **mid** = 10 and **spread** = 4, so  
+  - **Bid** = 10 − 4/2 = 8  
+  - **Offer** = 10 + 4/2 = 12
 
-- EV often clusters near 10.5; a symmetric book yields spread income with neutral expectation.
+- The expected dice total is  
+  \[
+    E[\Sigma] = 3 \times 3.5 = 10.5.
+  \]
 
-- If hidden dice reveal sum = 15, sellers paid 15 – bid/book risk.
+- Compute your “edges”:  
+  \[
+    \text{edgeBuy}  = \frac{\text{Offer} - E[\Sigma]}{\text{spread}}
+                   = \frac{12 - 10.5}{4}
+                   = 0.375,
+  \]
+  \[
+    \text{edgeSell} = \frac{E[\Sigma] - \text{Bid}}{\text{spread}}
+                   = \frac{10.5 - 8}{4}
+                   = 0.625.
+  \]
 
-- Imbalances (unequal buys vs sells) create directional P/L beyond spread.
+- Simulate 100 traders:  
+  - **buyers**  = round(0.375 × 100) = 38  
+  - **sellers** = round(0.625 × 100) = 63  
+  - **matched** = min(38, 63) = 38  
+  - **imbalance** = 38 − 63 = –25  (you’re net short)
 
+- **Spread revenue** = matched × spread = 38 × 4 = 152
 
+- **Inventory P/L** = imbalance × (realizedPrice − midpoint)  
+  If the dice sum realizes to 15, then  
+  \[
+    \text{inventoryPL} = -25 \times (15 - 10) = -125.
+  \]
+
+- **Total maker P/L this round**  
+  = spreadRevenue + inventoryPL  
+  = 152 + (–125)  
+  = **27**
+
+- That **+27** is added to your cumulative P/L each time you submit a market.
+
+- **NOTE:** Maker P/L is calculated by simulating 100 traders and constraining prices to the dice-sum range [3, 18].
 ---
 
 ## 4 Option pricing
