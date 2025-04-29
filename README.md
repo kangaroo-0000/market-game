@@ -94,7 +94,7 @@ Visible = 8, Hidden dice count = 2 → EV = 8 + 2×3.5 = 15.0
 
 - That **+27** is added to your cumulative P/L each time you submit a market.
 
-- **NOTE:** Maker P/L is calculated by simulating 100 traders and constraining prices to the dice-sum range [3, 18].
+
 ---
 
 ## 4 Option pricing
