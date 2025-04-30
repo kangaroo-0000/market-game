@@ -56,44 +56,26 @@ Visible = 8, Hidden dice count = 2 → EV = 8 + 2×3.5 = 15.0
   - **Bid** = 10 − 4/2 = 8  
   - **Offer** = 10 + 4/2 = 12
 
-- The expected dice total is  
-  \[
-    E[\Sigma] = 3 \times 3.5 = 10.5.
-  \]
+- The expected dice total is **E[Σ] = 3 × 3.5 = 10.5**.
 
 - Compute your “edges”:  
-  \[
-    \text{edgeBuy}  = \frac{\text{Offer} - E[\Sigma]}{\text{spread}}
-                   = \frac{12 - 10.5}{4}
-                   = 0.375,
-  \]
-  \[
-    \text{edgeSell} = \frac{E[\Sigma] - \text{Bid}}{\text{spread}}
-                   = \frac{10.5 - 8}{4}
-                   = 0.625.
-  \]
+  - **edgeBuy** = (Offer − E[Σ]) / spread = (12 − 10.5) / 4 = 0.375  
+  - **edgeSell** = (E[Σ] − Bid) / spread = (10.5 − 8) / 4 = 0.625
 
 - Simulate 100 traders:  
-  - **buyers**  = round(0.375 × 100) = 38  
+  - **buyers** = round(0.375 × 100) = 38  
   - **sellers** = round(0.625 × 100) = 63  
   - **matched** = min(38, 63) = 38  
-  - **imbalance** = 38 − 63 = –25  (you’re net short)
+  - **imbalance** = 38 − 63 = −25  (you’re net short)
 
 - **Spread revenue** = matched × spread = 38 × 4 = 152
 
-- **Inventory P/L** = imbalance × (realizedPrice − midpoint)  
-  If the dice sum realizes to 15, then  
-  \[
-    \text{inventoryPL} = -25 \times (15 - 10) = -125.
-  \]
+- **Inventory P/L** = imbalance × (realizedPrice − mid)  
+  If the dice sum realizes to 15, then **inventoryPL** = −25 × (15 − 10) = −125.
 
-- **Total maker P/L this round**  
-  = spreadRevenue + inventoryPL  
-  = 152 + (–125)  
-  = **27**
+- **Total maker P/L this round** = spreadRevenue + inventoryPL = 152 + (−125) = **27**
 
 - That **+27** is added to your cumulative P/L each time you submit a market.
-
 
 ---
 
